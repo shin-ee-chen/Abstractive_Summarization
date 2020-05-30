@@ -42,16 +42,11 @@ class SequenceToSequence(tf.keras.Model):
             your code
             如：xxx = self.decoder(), 采用Teachering Forcing方法
             """
-            # x:hidden词,out是预测,state是decoder hidden
-            # print("dec_inp shape is ", dec_inp.shape)
-            
-            # print("dec_tar is", dec_tar.shape)
-            # x[100, 1, 40]
-            dec_input = tf.expand_dims(dec_tar[:, t], 1)
-            # print("x shape ", x.shape)
-            # print("x[t] shape is ", x[:,: ,t].shape)
+            # dec_input输入的句子，dec_target预测结果
+            dec_input = tf.expand_dims(dec_inp[:, t], 1)
+            # print("dec_input.shape is ", dec_input.shape)
             _, pred, dec_hidden = self.decoder(dec_input, dec_hidden, enc_output, context_vector)
-            # print("x = {}, out = {}".format())
+            # print("pred = {}, dec_hidden = {}".format(pred.shape, dec_hidden.shape))
 
             context_vector, attn_dist = self.attention(dec_hidden, enc_output)
 

@@ -2,8 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 class Encoder(tf.keras.layers.Layer):
-    # def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, embedding_matrix):
-    def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz):
+    def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, embedding_matrix):
         super(Encoder, self).__init__()
         self.batch_sz = batch_sz
         # self.enc_units = enc_units
@@ -15,7 +14,8 @@ class Encoder(tf.keras.layers.Layer):
         """
         # tf.keras.layers.GRU自动匹配cpu、gpu
         #将词转换成embedding的形式
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim) 
+        self.embedding = tf.keras.layers.Embedding(input_dim = vocab_size, output_dim=embedding_dim,
+                                                    weights = [embedding_matrix], trainable = False) 
 
         """
         定义单向的RNN、GRU、LSTM层
