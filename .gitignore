@@ -1,0 +1,4 @@
+$ cat .gitignore
+datasets/
+utils/*.bin
+*/__pycache__

@@ -38,7 +38,8 @@ class BahdanauAttention(tf.keras.layers.Layer):
         归一化score，得到attn_dist
         your code
         """
-        attn_dist = tf.nn.softmax(att_score)
+        print(att_score.shape)
+        attn_dist = tf.nn.softmax(att_score, axis = 1)
 
         # context_vector shape after sum == (batch_size, hidden_size)
         context_vector = attn_dist * enc_output  # shape=(16, 200, 256)
