@@ -9,7 +9,6 @@ class SequenceToSequence(tf.keras.Model):
     def __init__(self, params):
         super(SequenceToSequence, self).__init__()
         self.embedding_matrix = load_word2vec(params)
-        # print("embedding_matrix.shape is ", self.embedding_matrix.shape)
         self.params = params
         self.encoder = rnn_encoder.Encoder(params["vocab_size"],
                                            params["embed_size"],
@@ -26,30 +25,29 @@ class SequenceToSequence(tf.keras.Model):
     def call_encoder(self, enc_inp):
         enc_hidden = self.encoder.initialize_hidden_state()
         # [batch_sz, max_train_x, enc_units], [batch_sz, enc_units]
-        print("enc_inp is {}, enc_hidden is {}".format(enc_inp.shape, enc_hidden.shape))
         enc_output, enc_hidden = self.encoder(enc_inp, enc_hidden)
         return enc_output, enc_hidden
+    
+    # def call_decoder_onestep(self, dec_input, dec_hidden, enc_output):
+    #     context_vector, attn_dist = self.attention(dec_hidden, enc_output)
+
+    #     _, pred, dec_hidden = self.decoder(dec_input, None, None, context_vector)
+    #     return pred, dec_hidden, context_vector, attn_dist
     
     def call(self, enc_output, dec_inp, dec_hidden, dec_tar):
         predictions = []
         attentions = []
         context_vector, _ = self.attention(dec_hidden,  # shape=(16, 256)
-                                           enc_output) # shape=(16, 200, 256)                                 
+                                           enc_output) # shape=(16, 200, 256)
+
         for t in range(dec_tar.shape[1]): # 50
             # Teachering Forcing
-            """
-            应用decoder来一步一步预测生成词语概论分布
-            your code
-            如：xxx = self.decoder(), 采用Teachering Forcing方法
-            """
-            # dec_input输入的句子，dec_target预测结果
-            dec_input = tf.expand_dims(dec_inp[:, t], 1)
-            # print("dec_input.shape is ", dec_input.shape)
-            _, pred, dec_hidden = self.decoder(dec_input, dec_hidden, enc_output, context_vector)
-            # print("pred = {}, dec_hidden = {}".format(pred.shape, dec_hidden.shape))
-
+            _, pred, dec_hidden = self.decoder(tf.expand_dims(dec_inp[:, t], 1),
+                                               dec_hidden,
+                                               enc_output,
+                                               context_vector)
             context_vector, attn_dist = self.attention(dec_hidden, enc_output)
-
+            
             predictions.append(pred)
             attentions.append(attn_dist)
 

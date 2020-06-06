@@ -50,7 +50,6 @@ def train_model(model, dataset, params, ckpt, ckpt_manager):
         t0 = time.time()
         step = 0
         total_loss = 0
-        
         # for step, batch in enumerate(dataset.take(params['steps_per_epoch'])):
         for batch in dataset:
         # for batch in dataset.take(params['steps_per_epoch']):
@@ -60,9 +59,7 @@ def train_model(model, dataset, params, ckpt, ckpt_manager):
            
             step += 1
             total_loss += loss
-            
-            print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1, step, total_loss / step))
-            if step % 10 == 0:
+            if step % 100 == 0:
                 print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1, step, total_loss / step))
                 # print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1, step, loss.numpy()))
 

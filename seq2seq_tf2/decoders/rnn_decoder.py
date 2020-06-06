@@ -22,24 +22,11 @@ class BahdanauAttention(tf.keras.layers.Layer):
         # we are doing this to perform addition to calculate the score
         hidden_with_time_axis = tf.expand_dims(dec_hidden, 1)  # shape=(16, 1, 256)
         # att_features = self.W1(enc_output) + self.W2(hidden_with_time_axis)
+
         # Calculate v^T tanh(W_h h_i + W_s s_t + b_attn)
-        """
-        定义score
-        your code
-        """
+        score = self.V(tf.nn.tanh(self.W1(enc_output) + self.W2(hidden_with_time_axis)))  # shape=(16, 200, 1)
         # Calculate attention distribution
-        # att_features = self.W1(enc_output) + self.W2(hidden_with_time_axis)
-        # # att_score = tf.transpose(self.V(tf.nn.tanh(att_features))
-        # att_score = self.V(tf.nn.tanh(att_features))
-
-        att_score = self.V(tf.nn.tanh(self.W1(enc_output) + self.W2(hidden_with_time_axis)))
-
-        """
-        归一化score，得到attn_dist
-        your code
-        """
-        print(att_score.shape)
-        attn_dist = tf.nn.softmax(att_score, axis = 1)
+        attn_dist = tf.nn.softmax(score, axis=1)  # shape=(16, 200, 1)
 
         # context_vector shape after sum == (batch_size, hidden_size)
         context_vector = attn_dist * enc_output  # shape=(16, 200, 256)
@@ -52,34 +39,30 @@ class Decoder(tf.keras.layers.Layer):
         super(Decoder, self).__init__()
         self.batch_sz = batch_sz
         self.dec_units = dec_units
-        """
-        定义Embedding层，加载预训练的词向量
-        your code
-        """
-        self.embedding =tf.keras.layers.Embedding(input_dim = vocab_size, output_dim = embedding_dim) 
-        """
-        定义单向的RNN、GRU、LSTM层
-        your code
-        """
-        self.rnn = tf.keras.layers.SimpleRNN(units = self.dec_units, return_sequences=True, return_state=True)
-        self.gru = tf.keras.layers.GRU(units = self.dec_units, return_sequences=True, return_state=True)
-        self.lstm = tf.keras.layers.LSTM(units = self.dec_units, return_sequences=True, return_state=True)
+        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim,
+                                                   weights=[embedding_matrix],
+                                                   trainable=False)
+        # self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.gru = tf.keras.layers.GRU(self.dec_units,
+                                       return_sequences=True,
+                                       return_state=True,
+                                       recurrent_initializer='glorot_uniform')
         # self.dropout = tf.keras.layers.Dropout(0.5)
-        """
-        定义最后的fc层，用于预测词的概率
-        your code
-        """
-        self.fc = tf.keras.layers.Dense(vocab_size)
+        self.fc = tf.keras.layers.Dense(vocab_size, activation=tf.keras.activations.softmax)
+        # self.fc = tf.keras.layers.Dense(vocab_size)
 
     def call(self, x, hidden, enc_output, context_vector):
         # enc_output shape == (batch_size, max_length, hidden_size)
+
         # x shape after passing through embedding == (batch_size, 1, embedding_dim)
-        # print("before emb x.shape is ", x.shape)
         x = self.embedding(x)
-        # print('x is ', x.shape)
+        # print('x.shape is ', x.shape)
+        # print('context vector.sape is', context_vector.shape)
 
         # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
         x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
+
+        # print("x after shape is", x.shape)
 
         # passing the concatenated vector to the GRU
         output, state = self.gru(x)
@@ -88,6 +71,7 @@ class Decoder(tf.keras.layers.Layer):
 
         # output = self.dropout(output)
         out = self.fc(output)
+        # print('out is ', out)
 
         return x, out, state
 
